@@ -12,11 +12,16 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
+import { Route as AppNominalRollRouteImport } from './routes/_app/nominal-roll'
 import { Route as AppLibraryRouteImport } from './routes/_app/library'
+import { Route as AppLeaveRouteImport } from './routes/_app/leave'
 import { Route as AppGalleryRouteImport } from './routes/_app/gallery'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppChatRouteImport } from './routes/_app/chat'
+import { Route as AppAttendanceRouteImport } from './routes/_app/attendance'
 import { Route as AppAnnouncementsRouteImport } from './routes/_app/announcements'
+import { Route as AppAdmissionRouteImport } from './routes/_app/admission'
+import { Route as AppAdminRouteImport } from './routes/_app/admin'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -32,9 +37,19 @@ const AppProfileRoute = AppProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AppRoute,
 } as any)
+const AppNominalRollRoute = AppNominalRollRouteImport.update({
+  id: '/nominal-roll',
+  path: '/nominal-roll',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLibraryRoute = AppLibraryRouteImport.update({
   id: '/library',
   path: '/library',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLeaveRoute = AppLeaveRouteImport.update({
+  id: '/leave',
+  path: '/leave',
   getParentRoute: () => AppRoute,
 } as any)
 const AppGalleryRoute = AppGalleryRouteImport.update({
@@ -52,69 +67,114 @@ const AppChatRoute = AppChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAttendanceRoute = AppAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAnnouncementsRoute = AppAnnouncementsRouteImport.update({
   id: '/announcements',
   path: '/announcements',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAdmissionRoute = AppAdmissionRouteImport.update({
+  id: '/admission',
+  path: '/admission',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminRoute = AppAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AppAdminRoute
+  '/admission': typeof AppAdmissionRoute
   '/announcements': typeof AppAnnouncementsRoute
+  '/attendance': typeof AppAttendanceRoute
   '/chat': typeof AppChatRoute
   '/dashboard': typeof AppDashboardRoute
   '/gallery': typeof AppGalleryRoute
+  '/leave': typeof AppLeaveRoute
   '/library': typeof AppLibraryRoute
+  '/nominal-roll': typeof AppNominalRollRoute
   '/profile': typeof AppProfileRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AppAdminRoute
+  '/admission': typeof AppAdmissionRoute
   '/announcements': typeof AppAnnouncementsRoute
+  '/attendance': typeof AppAttendanceRoute
   '/chat': typeof AppChatRoute
   '/dashboard': typeof AppDashboardRoute
   '/gallery': typeof AppGalleryRoute
+  '/leave': typeof AppLeaveRoute
   '/library': typeof AppLibraryRoute
+  '/nominal-roll': typeof AppNominalRollRoute
   '/profile': typeof AppProfileRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/_app/admin': typeof AppAdminRoute
+  '/_app/admission': typeof AppAdmissionRoute
   '/_app/announcements': typeof AppAnnouncementsRoute
+  '/_app/attendance': typeof AppAttendanceRoute
   '/_app/chat': typeof AppChatRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/gallery': typeof AppGalleryRoute
+  '/_app/leave': typeof AppLeaveRoute
   '/_app/library': typeof AppLibraryRoute
+  '/_app/nominal-roll': typeof AppNominalRollRoute
   '/_app/profile': typeof AppProfileRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
+    | '/admission'
     | '/announcements'
+    | '/attendance'
     | '/chat'
     | '/dashboard'
     | '/gallery'
+    | '/leave'
     | '/library'
+    | '/nominal-roll'
     | '/profile'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin'
+    | '/admission'
     | '/announcements'
+    | '/attendance'
     | '/chat'
     | '/dashboard'
     | '/gallery'
+    | '/leave'
     | '/library'
+    | '/nominal-roll'
     | '/profile'
   id:
     | '__root__'
     | '/'
     | '/_app'
+    | '/_app/admin'
+    | '/_app/admission'
     | '/_app/announcements'
+    | '/_app/attendance'
     | '/_app/chat'
     | '/_app/dashboard'
     | '/_app/gallery'
+    | '/_app/leave'
     | '/_app/library'
+    | '/_app/nominal-roll'
     | '/_app/profile'
   fileRoutesById: FileRoutesById
 }
@@ -146,11 +206,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfileRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/nominal-roll': {
+      id: '/_app/nominal-roll'
+      path: '/nominal-roll'
+      fullPath: '/nominal-roll'
+      preLoaderRoute: typeof AppNominalRollRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/library': {
       id: '/_app/library'
       path: '/library'
       fullPath: '/library'
       preLoaderRoute: typeof AppLibraryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/leave': {
+      id: '/_app/leave'
+      path: '/leave'
+      fullPath: '/leave'
+      preLoaderRoute: typeof AppLeaveRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/gallery': {
@@ -174,6 +248,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppChatRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/attendance': {
+      id: '/_app/attendance'
+      path: '/attendance'
+      fullPath: '/attendance'
+      preLoaderRoute: typeof AppAttendanceRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/announcements': {
       id: '/_app/announcements'
       path: '/announcements'
@@ -181,24 +262,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnnouncementsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/admission': {
+      id: '/_app/admission'
+      path: '/admission'
+      fullPath: '/admission'
+      preLoaderRoute: typeof AppAdmissionRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/admin': {
+      id: '/_app/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AppAdminRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
 interface AppRouteChildren {
+  AppAdminRoute: typeof AppAdminRoute
+  AppAdmissionRoute: typeof AppAdmissionRoute
   AppAnnouncementsRoute: typeof AppAnnouncementsRoute
+  AppAttendanceRoute: typeof AppAttendanceRoute
   AppChatRoute: typeof AppChatRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppGalleryRoute: typeof AppGalleryRoute
+  AppLeaveRoute: typeof AppLeaveRoute
   AppLibraryRoute: typeof AppLibraryRoute
+  AppNominalRollRoute: typeof AppNominalRollRoute
   AppProfileRoute: typeof AppProfileRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAdminRoute: AppAdminRoute,
+  AppAdmissionRoute: AppAdmissionRoute,
   AppAnnouncementsRoute: AppAnnouncementsRoute,
+  AppAttendanceRoute: AppAttendanceRoute,
   AppChatRoute: AppChatRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppGalleryRoute: AppGalleryRoute,
+  AppLeaveRoute: AppLeaveRoute,
   AppLibraryRoute: AppLibraryRoute,
+  AppNominalRollRoute: AppNominalRollRoute,
   AppProfileRoute: AppProfileRoute,
 }
 
@@ -211,3 +316,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
