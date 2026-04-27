@@ -1,4 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { AuthProvider } from "@/lib/auth-context";
+import { Toaster } from "@/components/ui/sonner";
+import { Toaster as RadixToaster } from "@/components/ui/toaster";
 
 import appCss from "../styles.css?url";
 
@@ -29,16 +32,38 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "VMKV NCC — VMKV Cadets" },
+      {
+        name: "description",
+        content:
+          "Official app of 11 Tamil Nadu Signal Company NCC Salem, VMKV Engineering College — for VMKV Cadets.",
+      },
+      { name: "author", content: "VMKV NCC" },
+      { name: "theme-color", content: "#1c3320" },
+      { property: "og:title", content: "VMKV NCC — VMKV Cadets" },
+      {
+        property: "og:description",
+        content:
+          "11 Tamil Nadu Signal Company NCC Salem · VMKV Engineering College.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
+      {
+        rel: "preconnect",
+        href: "https://fonts.googleapis.com",
+      },
+      {
+        rel: "preconnect",
+        href: "https://fonts.gstatic.com",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
@@ -65,5 +90,11 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  return <Outlet />;
+  return (
+    <AuthProvider>
+      <Outlet />
+      <Toaster />
+      <RadixToaster />
+    </AuthProvider>
+  );
 }
