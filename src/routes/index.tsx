@@ -107,7 +107,7 @@ function Landing() {
           <img
             src={logo}
             alt="VMKV Cadets emblem"
-            className="h-28 w-28 drop-shadow-2xl"
+            className="h-32 w-auto object-contain drop-shadow-2xl"
           />
           <h1 className="mt-4 text-4xl font-bold tracking-tight">VMKV NCC</h1>
           <p className="text-accent font-semibold tracking-widest text-sm mt-1">
