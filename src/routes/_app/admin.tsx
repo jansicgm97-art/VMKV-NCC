@@ -20,6 +20,13 @@ type Pending = {
   id: string; full_name: string; photo_url: string; user_id: string; created_at: string;
 };
 type UserRow = { id: string; full_name: string; photo_url: string | null; email: string | null };
+type PendingAccount = {
+  id: string;
+  full_name: string;
+  email: string | null;
+  photo_url: string | null;
+  created_at: string;
+};
 
 function Admin() {
   const { isAdmin, isAno, loading } = useAuth();
@@ -27,6 +34,7 @@ function Admin() {
   const [pending, setPending] = useState<Pending[]>([]);
   const [users, setUsers] = useState<UserRow[]>([]);
   const [rolesByUser, setRolesByUser] = useState<Record<string, AppRole[]>>({});
+  const [pendingAccounts, setPendingAccounts] = useState<PendingAccount[]>([]);
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate({ to: "/dashboard" });
@@ -46,6 +54,13 @@ function Admin() {
       map[r.user_id] = [...(map[r.user_id] ?? []), r.role as AppRole];
     });
     setRolesByUser(map);
+
+    const { data: pa } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, photo_url, created_at")
+      .eq("approval_status", "pending")
+      .order("created_at", { ascending: false });
+    setPendingAccounts((pa ?? []) as PendingAccount[]);
   };
   useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
 
@@ -81,6 +96,21 @@ function Admin() {
     load();
   };
 
+  const reviewAccount = async (uid: string, status: "approved" | "rejected") => {
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        approval_status: status,
+        approval_reviewed_by: u.user?.id,
+        approval_reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", uid);
+    if (error) return toast.error(error.message);
+    toast.success(`Account ${status}`);
+    load();
+  };
+
   if (!isAdmin) return null;
 
   return (
@@ -91,10 +121,33 @@ function Admin() {
       </h1>
 
       <Tabs defaultValue="approvals">
-        <TabsList className="grid grid-cols-2 w-full">
+        <TabsList className="grid grid-cols-3 w-full">
+          <TabsTrigger value="accounts">Accounts ({pendingAccounts.length})</TabsTrigger>
           <TabsTrigger value="approvals">Admissions ({pending.length})</TabsTrigger>
           <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="accounts" className="space-y-2 pt-3">
+          {pendingAccounts.length === 0 && (
+            <Card className="p-6 text-center text-sm text-muted-foreground">
+              No accounts awaiting approval.
+            </Card>
+          )}
+          {pendingAccounts.map((p) => (
+            <Card key={p.id} className="p-3 flex items-center gap-3">
+              <UserAvatar url={p.photo_url} name={p.full_name} className="h-12 w-12" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{p.full_name || "Unnamed cadet"}</p>
+                <p className="text-xs text-muted-foreground truncate">{p.email}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Signed up {new Date(p.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <Button size="sm" onClick={() => reviewAccount(p.id, "approved")}>Approve</Button>
+              <Button size="sm" variant="destructive" onClick={() => reviewAccount(p.id, "rejected")}>Reject</Button>
+            </Card>
+          ))}
+        </TabsContent>
 
         <TabsContent value="approvals" className="space-y-2 pt-3">
           {pending.length === 0 && <Card className="p-6 text-center text-sm text-muted-foreground">No pending admissions.</Card>}
