@@ -20,6 +20,8 @@ export interface ProfileRow {
   photo_url: string | null;
   bio: string | null;
   profile_completed: boolean;
+  approval_status: "pending" | "approved" | "rejected";
+  welcomed_at: string | null;
 }
 
 interface AuthCtx {
