@@ -421,6 +421,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          approval_reviewed_at: string | null
+          approval_reviewed_by: string | null
+          approval_status: Database["public"]["Enums"]["account_approval_status"]
           bio: string | null
           created_at: string
           email: string | null
@@ -432,8 +435,12 @@ export type Database = {
           rank: string | null
           regimental_number: string | null
           updated_at: string
+          welcomed_at: string | null
         }
         Insert: {
+          approval_reviewed_at?: string | null
+          approval_reviewed_by?: string | null
+          approval_status?: Database["public"]["Enums"]["account_approval_status"]
           bio?: string | null
           created_at?: string
           email?: string | null
@@ -445,8 +452,12 @@ export type Database = {
           rank?: string | null
           regimental_number?: string | null
           updated_at?: string
+          welcomed_at?: string | null
         }
         Update: {
+          approval_reviewed_at?: string | null
+          approval_reviewed_by?: string | null
+          approval_status?: Database["public"]["Enums"]["account_approval_status"]
           bio?: string | null
           created_at?: string
           email?: string | null
@@ -458,6 +469,7 @@ export type Database = {
           rank?: string | null
           regimental_number?: string | null
           updated_at?: string
+          welcomed_at?: string | null
         }
         Relationships: []
       }
@@ -501,6 +513,7 @@ export type Database = {
       is_senior_or_above: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
+      account_approval_status: "pending" | "approved" | "rejected"
       admission_status: "pending" | "approved" | "rejected"
       announcement_category: "camp" | "circular" | "notification"
       app_role: "ano" | "main_senior" | "senior" | "cadet"
@@ -633,6 +646,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_approval_status: ["pending", "approved", "rejected"],
       admission_status: ["pending", "approved", "rejected"],
       announcement_category: ["camp", "circular", "notification"],
       app_role: ["ano", "main_senior", "senior", "cadet"],
