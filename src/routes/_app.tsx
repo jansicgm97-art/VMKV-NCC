@@ -46,6 +46,14 @@ function AppShell() {
     if (!loading && !user) navigate({ to: "/" });
   }, [user, loading, navigate]);
 
+  // Block sign-in if account isn't approved yet
+  useEffect(() => {
+    if (loading || !user || !profile) return;
+    if (profile.approval_status && profile.approval_status !== "approved") {
+      signOut().then(() => navigate({ to: "/" }));
+    }
+  }, [loading, user, profile, signOut, navigate]);
+
   if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">

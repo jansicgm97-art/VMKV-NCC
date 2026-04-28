@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import logo from "@/assets/vmkv-ncc-logo.png";
 import bg from "@/assets/auditorium-bg.jpg";
 import { Shield, ChevronRight } from "lucide-react";
+import { WelcomeCelebration } from "@/components/app/WelcomeCelebration";
 
 export const Route = createFileRoute("/")({
   component: Landing,
@@ -34,13 +35,33 @@ function Landing() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
+  const [celebrate, setCelebrate] = useState<{ name: string } | null>(null);
 
   useEffect(() => {
     if (!loading && user) navigate({ to: "/dashboard" });
   }, [user, loading, navigate]);
 
+  // Detect first-time OAuth signup landing back here and celebrate
+  useEffect(() => {
+    const flag = sessionStorage.getItem("vmkv_just_signed_up");
+    if (flag) {
+      sessionStorage.removeItem("vmkv_just_signed_up");
+      setCelebrate({ name: flag });
+    }
+  }, []);
+
+  const checkApproval = async (uid: string): Promise<"approved" | "pending" | "rejected"> => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("approval_status")
+      .eq("id", uid)
+      .maybeSingle();
+    return ((data?.approval_status as "approved" | "pending" | "rejected") ?? "pending");
+  };
+
   const onGoogle = async () => {
     setBusy(true);
+    sessionStorage.setItem("vmkv_oauth_attempt", "1");
     const r = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
     });
@@ -50,11 +71,12 @@ function Landing() {
       return;
     }
     if (r.redirected) return;
-    navigate({ to: "/dashboard" });
+    await handlePostAuth();
   };
 
   const onMicrosoft = async () => {
     setBusy(true);
+    sessionStorage.setItem("vmkv_oauth_attempt", "1");
     const r = await lovable.auth.signInWithOAuth("microsoft", {
       redirect_uri: window.location.origin,
     });
@@ -64,6 +86,34 @@ function Landing() {
       return;
     }
     if (r.redirected) return;
+    await handlePostAuth();
+  };
+
+  const handlePostAuth = async () => {
+    const { data: { user: u } } = await supabase.auth.getUser();
+    if (!u) return;
+    const status = await checkApproval(u.id);
+    if (status !== "approved") {
+      // Was this their very first time? welcomed_at null = yes.
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, welcomed_at")
+        .eq("id", u.id)
+        .maybeSingle();
+      await supabase.auth.signOut();
+      if (!prof?.welcomed_at) {
+        await supabase.from("profiles").update({ welcomed_at: new Date().toISOString() }).eq("id", u.id);
+        setCelebrate({ name: prof?.full_name || u.user_metadata?.full_name || "" });
+      } else {
+        toast.error(
+          status === "rejected"
+            ? "Your account was rejected. Please contact the ANO."
+            : "Your account is pending admin approval.",
+        );
+      }
+      setBusy(false);
+      return;
+    }
     navigate({ to: "/dashboard" });
   };
 
@@ -71,9 +121,11 @@ function Landing() {
     e.preventDefault();
     setBusy(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    navigate({ to: "/dashboard" });
+    if (error) {
+      setBusy(false);
+      return toast.error(error.message);
+    }
+    await handlePostAuth();
   };
 
   const onEmailSignup = async (e: React.FormEvent) => {
@@ -87,11 +139,23 @@ function Landing() {
         data: { full_name: name },
       },
     });
+    if (error) {
+      setBusy(false);
+      return toast.error(error.message);
+    }
+    // Try to mark welcomed_at + sign out so they wait for approval
+    const { data: { user: u } } = await supabase.auth.getUser();
+    if (u) {
+      await supabase.from("profiles").update({ welcomed_at: new Date().toISOString() }).eq("id", u.id);
+      await supabase.auth.signOut();
+    }
     setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Account created. Welcome!");
-    navigate({ to: "/dashboard" });
+    setCelebrate({ name });
   };
+
+  if (celebrate) {
+    return <WelcomeCelebration name={celebrate.name} onClose={() => setCelebrate(null)} />;
+  }
 
   return (
     <div className="relative min-h-screen flex flex-col">
