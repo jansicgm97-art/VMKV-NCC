@@ -59,7 +59,7 @@ function AppShell() {
       <header className="sticky top-0 z-40 bg-sidebar text-sidebar-foreground shadow-elegant">
         <div className="mx-auto max-w-3xl flex items-center justify-between px-4 py-3">
           <Link to="/dashboard" className="flex items-center gap-2">
-            <img src={logo} alt="" className="h-9 w-9" />
+            <img src={logo} alt="" className="h-10 w-auto object-contain" />
             <div className="leading-tight">
               <div className="font-bold text-base">VMKV NCC</div>
               <div className="text-[10px] tracking-widest opacity-80">
