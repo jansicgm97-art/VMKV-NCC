@@ -27,6 +27,14 @@ type PendingAccount = {
   photo_url: string | null;
   created_at: string;
 };
+type RejectedAccount = {
+  id: string;
+  full_name: string;
+  email: string | null;
+  photo_url: string | null;
+  created_at: string;
+  approval_reviewed_at: string | null;
+};
 
 function Admin() {
   const { isAdmin, isAno, loading } = useAuth();
@@ -35,6 +43,7 @@ function Admin() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [rolesByUser, setRolesByUser] = useState<Record<string, AppRole[]>>({});
   const [pendingAccounts, setPendingAccounts] = useState<PendingAccount[]>([]);
+  const [rejectedAccounts, setRejectedAccounts] = useState<RejectedAccount[]>([]);
 
   useEffect(() => {
     if (!loading && !isAdmin) navigate({ to: "/dashboard" });
@@ -46,7 +55,9 @@ function Admin() {
       .order("created_at", { ascending: false });
     setPending((ad ?? []) as Pending[]);
 
-    const { data: us } = await supabase.from("profiles").select("id, full_name, photo_url, email").order("full_name");
+    const { data: us } = await supabase.from("profiles").select("id, full_name, photo_url, email")
+      .eq("approval_status", "approved")
+      .order("full_name");
     setUsers((us ?? []) as UserRow[]);
     const { data: rs } = await supabase.from("user_roles").select("user_id, role");
     const map: Record<string, AppRole[]> = {};
@@ -61,6 +72,13 @@ function Admin() {
       .eq("approval_status", "pending")
       .order("created_at", { ascending: false });
     setPendingAccounts((pa ?? []) as PendingAccount[]);
+
+    const { data: ra } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, photo_url, created_at, approval_reviewed_at")
+      .eq("approval_status", "rejected")
+      .order("created_at", { ascending: false });
+    setRejectedAccounts((ra ?? []) as RejectedAccount[]);
   };
   useEffect(() => { if (isAdmin) load(); }, [isAdmin]);
 
@@ -121,8 +139,9 @@ function Admin() {
       </h1>
 
       <Tabs defaultValue="approvals">
-        <TabsList className="grid grid-cols-3 w-full">
+        <TabsList className="grid grid-cols-4 w-full">
           <TabsTrigger value="accounts">Accounts ({pendingAccounts.length})</TabsTrigger>
+          <TabsTrigger value="rejected">Rejected ({rejectedAccounts.length})</TabsTrigger>
           <TabsTrigger value="approvals">Admissions ({pending.length})</TabsTrigger>
           <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
         </TabsList>
@@ -145,6 +164,32 @@ function Admin() {
               </div>
               <Button size="sm" onClick={() => reviewAccount(p.id, "approved")}>Approve</Button>
               <Button size="sm" variant="destructive" onClick={() => reviewAccount(p.id, "rejected")}>Reject</Button>
+            </Card>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="rejected" className="space-y-2 pt-3">
+          {rejectedAccounts.length === 0 && (
+            <Card className="p-6 text-center text-sm text-muted-foreground">
+              No rejected accounts.
+            </Card>
+          )}
+          {rejectedAccounts.map((p) => (
+            <Card key={p.id} className="p-3 flex items-center gap-3">
+              <UserAvatar url={p.photo_url} name={p.full_name} className="h-12 w-12" />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{p.full_name || "Unnamed cadet"}</p>
+                <p className="text-xs text-muted-foreground truncate">{p.email}</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Signed up {new Date(p.created_at).toLocaleDateString()}
+                </p>
+                {p.approval_reviewed_at && (
+                  <p className="text-[10px] text-red-600">
+                    Rejected {new Date(p.approval_reviewed_at).toLocaleDateString()}
+                  </p>
+                )}
+              </div>
+              <Button size="sm" variant="outline" onClick={() => reviewAccount(p.id, "approved")}>Re-approve</Button>
             </Card>
           ))}
         </TabsContent>

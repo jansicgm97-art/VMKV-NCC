@@ -46,13 +46,13 @@ function AppShell() {
     if (!loading && !user) navigate({ to: "/" });
   }, [user, loading, navigate]);
 
-  // Block sign-in if account isn't approved yet
+  // Block sign-in if account isn't approved yet (except for admins)
   useEffect(() => {
     if (loading || !user || !profile) return;
-    if (profile.approval_status && profile.approval_status !== "approved") {
+    if (!isAdmin && profile.approval_status && profile.approval_status !== "approved") {
       signOut().then(() => navigate({ to: "/" }));
     }
-  }, [loading, user, profile, signOut, navigate]);
+  }, [loading, user, profile, isAdmin, signOut, navigate]);
 
   if (loading || !user) {
     return (

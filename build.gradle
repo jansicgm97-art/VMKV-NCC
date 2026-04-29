@@ -1,0 +1,10 @@
+// build.gradle (Module: app)
+dependencies {
+    implementation 'com.google.firebase:firebase-auth:22.3.1'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation 'com.microsoft.identity.client:msal:4.8.0'
+    // Other dependencies...
+}
+
+// Ensure google-services.json is in app/ folder
+apply plugin: 'com.google.gms.google-services'

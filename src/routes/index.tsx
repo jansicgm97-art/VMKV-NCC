@@ -7,18 +7,18 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 import logo from "@/assets/vmkv-ncc-logo.png";
 import bg from "@/assets/auditorium-bg.jpg";
 import { Shield, ChevronRight } from "lucide-react";
 import { WelcomeCelebration } from "@/components/app/WelcomeCelebration";
+import { getGoogleIdToken, getMicrosoftIdToken } from "@/lib/oauth-utils";
 
 export const Route = createFileRoute("/")({
   component: Landing,
   head: () => ({
     meta: [
-      { title: "VMKV NCC — Sign in" },
+      { title: "Welcome to VMKV NCC" },
       {
         name: "description",
         content:
@@ -62,38 +62,57 @@ function Landing() {
   const onGoogle = async () => {
     setBusy(true);
     sessionStorage.setItem("vmkv_oauth_attempt", "1");
-    const r = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
-    });
-    if (r.error) {
-      toast.error("Google sign-in failed");
+    try {
+      const idToken = await getGoogleIdToken();
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "google",
+        token: idToken,
+      });
+      if (error) {
+        throw error;
+      }
+      await handlePostAuth();
+    } catch (err) {
+      toast.error((err as Error)?.message ?? "Google sign-in failed");
       setBusy(false);
-      return;
     }
-    if (r.redirected) return;
-    await handlePostAuth();
   };
 
   const onMicrosoft = async () => {
     setBusy(true);
     sessionStorage.setItem("vmkv_oauth_attempt", "1");
-    const r = await lovable.auth.signInWithOAuth("microsoft", {
-      redirect_uri: window.location.origin,
-    });
-    if (r.error) {
-      toast.error("Microsoft sign-in failed");
+    try {
+      const { idToken, accessToken, nonce } = await getMicrosoftIdToken();
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: "azure",
+        token: idToken,
+        access_token: accessToken,
+        nonce,
+      });
+      if (error) {
+        throw error;
+      }
+      await handlePostAuth();
+    } catch (err) {
+      toast.error((err as Error)?.message ?? "Microsoft sign-in failed");
       setBusy(false);
-      return;
     }
-    if (r.redirected) return;
-    await handlePostAuth();
   };
 
   const handlePostAuth = async () => {
     const { data: { user: u } } = await supabase.auth.getUser();
     if (!u) return;
+
+    // Check if user has admin roles (ANO or main_senior)
+    const { data: userRoles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", u.id);
+
+    const isAdmin = userRoles?.some(r => r.role === "ano" || r.role === "main_senior") ?? false;
+
     const status = await checkApproval(u.id);
-    if (status !== "approved") {
+    if (!isAdmin && status !== "approved") {
       // Was this their very first time? welcomed_at null = yes.
       const { data: prof } = await supabase
         .from("profiles")

@@ -3,6 +3,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 
 import appCss from "../styles.css?url";
+import logo from "@/assets/vmkv-ncc-logo.png";
 
 function NotFoundComponent() {
   return (
@@ -31,7 +32,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "VMKV NCC — VMKV Cadets" },
+      { title: "Welcome to VMKV NCC" },
       {
         name: "description",
         content:
@@ -39,7 +40,7 @@ export const Route = createRootRoute({
       },
       { name: "author", content: "VMKV NCC" },
       { name: "theme-color", content: "#1c3320" },
-      { property: "og:title", content: "VMKV NCC — VMKV Cadets" },
+      { property: "og:title", content: "Welcome to VMKV NCC" },
       {
         property: "og:description",
         content:
@@ -47,9 +48,12 @@ export const Route = createRootRoute({
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
+      {
+        rel: "icon",
+        href: logo,
+      },
       {
         rel: "preconnect",
         href: "https://fonts.googleapis.com",
