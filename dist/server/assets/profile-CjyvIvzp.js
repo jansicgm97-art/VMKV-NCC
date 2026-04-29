@@ -1,0 +1,295 @@
+import { r as reactExports, U as jsxRuntimeExports } from "./worker-entry-nmbh7RaZ.js";
+import { u as useAuth, t as toast, s as supabase } from "./router-ANgPuP48.js";
+import { C as Card } from "./card-3z3NcXTO.js";
+import { B as Button } from "./button-B2R08Of-.js";
+import { I as Input } from "./input-DD7rev21.js";
+import { L as Label } from "./label-DwcCBX1v.js";
+import { T as Textarea } from "./textarea-DPTcPPFi.js";
+import { U as UserAvatar } from "./UserAvatar-T8hiH7Ix.js";
+import { R as RoleBadge } from "./RoleBadge-DwZrghCU.js";
+import { c as compressToSquareJpeg } from "./image-utils-C3htUm6p.js";
+import { c as createLucideIcon } from "./index-CSwKuDfi.js";
+import "node:events";
+import "node:async_hooks";
+import "node:stream/web";
+import "node:stream";
+import "./index-BhpMngH6.js";
+import "./badge-CNkGfYSq.js";
+const __iconNode$2 = [
+  [
+    "path",
+    {
+      d: "M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z",
+      key: "18u6gg"
+    }
+  ],
+  ["circle", { cx: "12", cy: "13", r: "3", key: "1vg3eu" }]
+];
+const Camera = createLucideIcon("camera", __iconNode$2);
+const __iconNode$1 = [
+  ["path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71", key: "1cjeqo" }],
+  ["path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71", key: "19qd67" }]
+];
+const Link = createLucideIcon("link", __iconNode$1);
+const __iconNode = [
+  [
+    "path",
+    {
+      d: "m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71",
+      key: "yqzxt4"
+    }
+  ],
+  [
+    "path",
+    {
+      d: "m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71",
+      key: "4qinb0"
+    }
+  ],
+  ["line", { x1: "8", x2: "8", y1: "2", y2: "5", key: "1041cp" }],
+  ["line", { x1: "2", x2: "5", y1: "8", y2: "8", key: "14m1p5" }],
+  ["line", { x1: "16", x2: "16", y1: "19", y2: "22", key: "rzdirn" }],
+  ["line", { x1: "19", x2: "22", y1: "16", y2: "16", key: "ox905f" }]
+];
+const Unlink = createLucideIcon("unlink", __iconNode);
+function ProfilePage() {
+  const {
+    user,
+    profile,
+    roles,
+    refresh,
+    isAdmin
+  } = useAuth();
+  const [fullName, setFullName] = reactExports.useState(profile?.full_name ?? "");
+  const [phone, setPhone] = reactExports.useState(profile?.phone ?? "");
+  const [regNo, setRegNo] = reactExports.useState(profile?.regimental_number ?? "");
+  const [bio, setBio] = reactExports.useState(profile?.bio ?? "");
+  const [busy, setBusy] = reactExports.useState(false);
+  const [linkingBusy, setLinkingBusy] = reactExports.useState(false);
+  const [linkedIdentities, setLinkedIdentities] = reactExports.useState([]);
+  const fileRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    if (user) {
+      loadLinkedIdentities();
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("link_identity") === "true") {
+      window.history.replaceState({}, document.title, window.location.pathname);
+      setTimeout(() => {
+        loadLinkedIdentities();
+        toast.success("Account linked successfully!");
+      }, 1e3);
+    }
+  }, [user]);
+  const loadLinkedIdentities = async () => {
+    if (!user) return;
+    try {
+      const {
+        data,
+        error
+      } = await supabase.auth.admin.listUserIdentities(user.id);
+      if (error) throw error;
+      setLinkedIdentities(data?.identities || []);
+    } catch (e) {
+      console.error("Failed to load linked identities:", e);
+    }
+  };
+  const save = async (e) => {
+    e.preventDefault();
+    if (!user) return;
+    setBusy(true);
+    const {
+      error
+    } = await supabase.from("profiles").update({
+      full_name: fullName,
+      phone: phone || null,
+      regimental_number: regNo || null,
+      bio: bio || null,
+      profile_completed: true
+    }).eq("id", user.id);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Saved");
+    await refresh();
+  };
+  const uploadPhoto = async (file) => {
+    if (!user) return;
+    setBusy(true);
+    try {
+      const blob = await compressToSquareJpeg(file, 600, 0.85);
+      const path = `${user.id}/avatar.jpg`;
+      const {
+        error
+      } = await supabase.storage.from("profile-photos").upload(path, blob, {
+        contentType: "image/jpeg",
+        upsert: true
+      });
+      if (error) throw error;
+      const {
+        data: {
+          publicUrl
+        }
+      } = supabase.storage.from("profile-photos").getPublicUrl(path);
+      const cacheBust = `${publicUrl}?v=${Date.now()}`;
+      const {
+        error: e2
+      } = await supabase.from("profiles").update({
+        photo_url: cacheBust
+      }).eq("id", user.id);
+      if (e2) throw e2;
+      toast.success("Photo updated");
+      await refresh();
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const linkGoogleAccount = async () => {
+    if (!user) return;
+    setLinkingBusy(true);
+    try {
+      const {
+        error
+      } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/profile`,
+          queryParams: {
+            link_identity: "true"
+          }
+        }
+      });
+      if (error) throw error;
+    } catch (e) {
+      toast.error(e.message);
+      setLinkingBusy(false);
+    }
+  };
+  const linkMicrosoftAccount = async () => {
+    if (!user) return;
+    setLinkingBusy(true);
+    try {
+      const {
+        error
+      } = await supabase.auth.signInWithOAuth({
+        provider: "azure",
+        options: {
+          redirectTo: `${window.location.origin}/profile`,
+          queryParams: {
+            link_identity: "true"
+          }
+        }
+      });
+      if (error) throw error;
+    } catch (e) {
+      toast.error(e.message);
+      setLinkingBusy(false);
+    }
+  };
+  const unlinkIdentity = async (identityId) => {
+    if (!user) return;
+    setLinkingBusy(true);
+    try {
+      const {
+        error
+      } = await supabase.auth.unlinkIdentity({
+        identity_id: identityId
+      });
+      if (error) throw error;
+      toast.success("Account unlinked successfully");
+      await loadLinkedIdentities();
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setLinkingBusy(false);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-2xl font-bold", children: "My Profile" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "p-5", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center gap-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(UserAvatar, { url: profile?.photo_url, name: profile?.full_name, className: "h-28 w-28" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("button", { type: "button", onClick: () => fileRef.current?.click(), className: "absolute bottom-0 right-0 rounded-full bg-accent text-accent-foreground p-2 shadow-elegant hover:scale-110 transition", "aria-label": "Change photo", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Camera, { className: "h-4 w-4" }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("input", { ref: fileRef, type: "file", accept: "image/*", hidden: true, onChange: (e) => {
+          const f = e.target.files?.[0];
+          if (f) uploadPhoto(f);
+        } })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-semibold", children: profile?.full_name || "Cadet" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-xs text-muted-foreground", children: profile?.email }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex gap-1 justify-center mt-1", children: roles.map((r) => /* @__PURE__ */ jsxRuntimeExports.jsx(RoleBadge, { role: r }, r)) })
+      ] })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Card, { className: "p-5", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: save, className: "space-y-3", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { children: "Full name" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { value: fullName, onChange: (e) => setFullName(e.target.value), required: true, maxLength: 120 })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { children: "Phone" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { value: phone, onChange: (e) => setPhone(e.target.value), maxLength: 20 })
+        ] }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { children: "Regimental No." }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { value: regNo, onChange: (e) => setRegNo(e.target.value), maxLength: 50 })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Label, { children: "Bio" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Textarea, { value: bio, onChange: (e) => setBio(e.target.value), maxLength: 500, rows: 3 })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Button, { type: "submit", disabled: busy, children: "Save changes" })
+    ] }) }),
+    (profile?.approval_status === "approved" || isAdmin) && /* @__PURE__ */ jsxRuntimeExports.jsxs(Card, { className: "p-5", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "text-lg font-semibold mb-4 flex items-center gap-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { className: "h-5 w-5" }),
+        "Linked Accounts"
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground mb-4", children: "Link additional accounts for easier sign-in. You can link Google and Microsoft accounts." }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3", children: [
+        linkedIdentities.map((identity) => /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between p-3 border rounded-lg", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-3", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-8 h-8 rounded-full bg-muted flex items-center justify-center", children: [
+              identity.provider === "google" && /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { className: "w-4 h-4", viewBox: "0 0 24 24", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" })
+              ] }),
+              identity.provider === "azure" && /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { className: "w-4 h-4", viewBox: "0 0 24 24", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M3 3h18v18H3V3zm16 16V5H5v14h14zM9 7h6v2H9V7zm0 4h6v2H9v-2zm0 4h4v2H9v-2z" }) })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "font-medium capitalize", children: identity.provider }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-muted-foreground", children: identity.identity_data?.email || "Linked account" })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { variant: "outline", size: "sm", onClick: () => unlinkIdentity(identity.id), disabled: linkingBusy, className: "text-destructive hover:text-destructive", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(Unlink, { className: "h-4 w-4 mr-2" }),
+            "Unlink"
+          ] })
+        ] }, identity.id)),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex gap-3 pt-2", children: [
+          !linkedIdentities.some((id) => id.provider === "google") && /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { variant: "outline", onClick: linkGoogleAccount, disabled: linkingBusy, className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { className: "w-4 h-4", viewBox: "0 0 24 24", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" })
+            ] }),
+            "Link Google Account"
+          ] }),
+          !linkedIdentities.some((id) => id.provider === "azure") && /* @__PURE__ */ jsxRuntimeExports.jsxs(Button, { variant: "outline", onClick: linkMicrosoftAccount, disabled: linkingBusy, className: "flex items-center gap-2", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { className: "w-4 h-4", viewBox: "0 0 24 24", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M3 3h18v18H3V3zm16 16V5H5v14h14zM9 7h6v2H9V7zm0 4h6v2H9v-2zm0 4h4v2H9v-2z" }) }),
+            "Link Microsoft Account"
+          ] })
+        ] })
+      ] })
+    ] })
+  ] });
+}
+export {
+  ProfilePage as component
+};
